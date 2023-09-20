@@ -12,7 +12,7 @@ from albumy.models import Notification
 
 
 def push_follow_notification(follower, receiver):
-    message = 'User <a href="%s">%s</a> followed you.' % \
+    message = 'User <a href="%s">%s</a> follows you.' % \
               (url_for('user.index', username=follower.username), follower.username)
     notification = Notification(message=message, receiver=receiver)
     db.session.add(notification)
