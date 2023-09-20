@@ -20,7 +20,7 @@ create & activate virtual env then install dependency:
 
 with venv/virtualenv + pip:
 ```
-# hint: you can find your python version with the command: $ python --version
+# hint: you can find your python versiopipn with the command: $ python --version
 
 $ python -m venv env  # use `virtualenv env` for Python2, use `python3 ...` for Python3 on Linux & macOS
 $ source env/bin/activate  # use `env\Scripts\activate` on Windows
