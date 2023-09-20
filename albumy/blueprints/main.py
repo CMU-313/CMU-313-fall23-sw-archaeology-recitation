@@ -36,7 +36,8 @@ def index():
     else:
         pagination = None
         photos = None
-    tags = Tag.query.join(Tag.photos).group_by(Tag.id).order_by(func.count(Photo.id).desc()).limit(10)
+    tags = Tag.query.join(Tag.photos).group_by(
+        Tag.id).order_by(func.count(Photo.id).desc()).limit(10)
     return render_template('main/index.html', pagination=pagination, photos=photos, tags=tags, Collect=Collect)
 
 
@@ -76,7 +77,8 @@ def show_notifications():
     if filter_rule == 'unread':
         notifications = notifications.filter_by(is_read=False)
 
-    pagination = notifications.order_by(Notification.timestamp.desc()).paginate(page, per_page)
+    pagination = notifications.order_by(
+        Notification.timestamp.desc()).paginate(page, per_page)
     notifications = pagination.items
     return render_template('main/notifications.html', pagination=pagination, notifications=notifications)
 
@@ -122,9 +124,12 @@ def upload():
     if request.method == 'POST' and 'file' in request.files:
         f = request.files.get('file')
         filename = rename_image(f.filename)
-        f.save(os.path.join(current_app.config['ALBUMY_UPLOAD_PATH'], filename))
-        filename_s = resize_image(f, filename, current_app.config['ALBUMY_PHOTO_SIZE']['small'])
-        filename_m = resize_image(f, filename, current_app.config['ALBUMY_PHOTO_SIZE']['medium'])
+        f.save(os.path.join(
+            current_app.config['ALBUMY_UPLOAD_PATH'], filename))
+        filename_s = resize_image(
+            f, filename, current_app.config['ALBUMY_PHOTO_SIZE']['small'])
+        filename_m = resize_image(
+            f, filename, current_app.config['ALBUMY_PHOTO_SIZE']['medium'])
         photo = Photo(
             filename=filename,
             filename_s=filename_s,
@@ -141,7 +146,8 @@ def show_photo(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['ALBUMY_COMMENT_PER_PAGE']
-    pagination = Comment.query.with_parent(photo).order_by(Comment.timestamp.asc()).paginate(page, per_page)
+    pagination = Comment.query.with_parent(photo).order_by(
+        Comment.timestamp.asc()).paginate(page, per_page)
     comments = pagination.items
 
     comment_form = CommentForm()
@@ -157,7 +163,8 @@ def show_photo(photo_id):
 @main_bp.route('/photo/n/<int:photo_id>')
 def photo_next(photo_id):
     photo = Photo.query.get_or_404(photo_id)
-    photo_n = Photo.query.with_parent(photo.author).filter(Photo.id < photo_id).order_by(Photo.id.desc()).first()
+    photo_n = Photo.query.with_parent(photo.author).filter(
+        Photo.id < photo_id).order_by(Photo.id.desc()).first()
 
     if photo_n is None:
         flash('This is already the last one.', 'info')
@@ -168,7 +175,8 @@ def photo_next(photo_id):
 @main_bp.route('/photo/p/<int:photo_id>')
 def photo_previous(photo_id):
     photo = Photo.query.get_or_404(photo_id)
-    photo_p = Photo.query.with_parent(photo.author).filter(Photo.id > photo_id).order_by(Photo.id.asc()).first()
+    photo_p = Photo.query.with_parent(photo.author).filter(
+        Photo.id > photo_id).order_by(Photo.id.asc()).first()
 
     if photo_p is None:
         flash('This is already the first one.', 'info')
@@ -189,7 +197,8 @@ def collect(photo_id):
     current_user.collect(photo)
     flash('Photo collected.', 'success')
     if current_user != photo.author and photo.author.receive_collect_notification:
-        push_collect_notification(collector=current_user, photo_id=photo_id, receiver=photo.author)
+        push_collect_notification(
+            collector=current_user, photo_id=photo_id, receiver=photo.author)
     return redirect(url_for('.show_photo', photo_id=photo_id))
 
 
@@ -233,7 +242,8 @@ def show_collectors(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['ALBUMY_USER_PER_PAGE']
-    pagination = Collect.query.with_parent(photo).order_by(Collect.timestamp.asc()).paginate(page, per_page)
+    pagination = Collect.query.with_parent(photo).order_by(
+        Collect.timestamp.asc()).paginate(page, per_page)
     collects = pagination.items
     return render_template('main/collectors.html', collects=collects, photo=photo, pagination=pagination)
 
@@ -271,13 +281,15 @@ def new_comment(photo_id):
         if replied_id:
             comment.replied = Comment.query.get_or_404(replied_id)
             if comment.replied.author.receive_comment_notification:
-                push_comment_notification(photo_id=photo.id, receiver=comment.replied.author)
+                push_comment_notification(
+                    photo_id=photo.id, receiver=comment.replied.author)
         db.session.add(comment)
         db.session.commit()
         flash('Comment published.', 'success')
 
         if current_user != photo.author and photo.author.receive_comment_notification:
-            push_comment_notification(photo_id, receiver=photo.author, page=page)
+            push_comment_notification(
+                photo_id, receiver=photo.author, page=page)
 
     flash_errors(form)
     return redirect(url_for('.show_photo', photo_id=photo_id, page=page))
@@ -345,16 +357,18 @@ def delete_photo(photo_id):
     db.session.commit()
     flash('Photo deleted.', 'info')
 
-    photo_n = Photo.query.with_parent(photo.author).filter(Photo.id < photo_id).order_by(Photo.id.desc()).first()
+    photo_n = Photo.query.with_parent(photo.author).filter(
+        Photo.id < photo_id).order_by(Photo.id.desc()).first()
     if photo_n is None:
-        photo_p = Photo.query.with_parent(photo.author).filter(Photo.id > photo_id).order_by(Photo.id.asc()).first()
+        photo_p = Photo.query.with_parent(photo.author).filter(
+            Photo.id > photo_id).order_by(Photo.id.asc()).first()
         if photo_p is None:
             return redirect(url_for('user.index', username=photo.author.username))
         return redirect(url_for('.show_photo', photo_id=photo_p.id))
     return redirect(url_for('.show_photo', photo_id=photo_n.id))
 
 
-@main_bp.route('/delete/comment/<int:comment_id>', methods=['POST'])
+@main_bp.route('/delete/comment/<int:comment_id>', methods=['POST', 'DELETE'])
 @login_required
 def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
@@ -362,6 +376,7 @@ def delete_comment(comment_id):
             and not current_user.can('MODERATE'):
         abort(403)
     db.session.delete(comment)
+    db.session.commit()
     flash('Comment deleted.', 'info')
     return redirect(url_for('.show_photo', photo_id=comment.photo_id))
 
@@ -373,7 +388,8 @@ def show_tag(tag_id, order):
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['ALBUMY_PHOTO_PER_PAGE']
     order_rule = 'time'
-    pagination = Photo.query.with_parent(tag).order_by(Photo.timestamp.desc()).paginate(page, per_page)
+    pagination = Photo.query.with_parent(tag).order_by(
+        Photo.timestamp.desc()).paginate(page, per_page)
     photos = pagination.items
 
     if order == 'by_collects':
