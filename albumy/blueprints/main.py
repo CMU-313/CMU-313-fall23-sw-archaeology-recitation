@@ -357,11 +357,13 @@ def delete_photo(photo_id):
 @main_bp.route('/delete/comment/<int:comment_id>', methods=['POST'])
 @login_required
 def delete_comment(comment_id):
+    print("Called Delete")
     comment = Comment.query.get_or_404(comment_id)
     if current_user != comment.author and current_user != comment.photo.author \
             and not current_user.can('MODERATE'):
         abort(403)
     db.session.delete(comment)
+    db.session.commit()
     flash('Comment deleted.', 'info')
     return redirect(url_for('.show_photo', photo_id=comment.photo_id))
 
