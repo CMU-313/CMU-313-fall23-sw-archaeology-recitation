@@ -144,3 +144,6 @@ class AjaxTestCase(BaseTestCase):
         data = response.get_json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['message'], 'Follow canceled.')
+
+
+#Test 2
