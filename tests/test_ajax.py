@@ -146,4 +146,4 @@ class AjaxTestCase(BaseTestCase):
         self.assertEqual(data['message'], 'Follow canceled.')
 
 
-#Hello
+#Test 2
